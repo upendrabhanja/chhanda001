@@ -1,16 +1,8 @@
-# ✅ Final Odia Song Structure Collector (Widget-Based Version with Editable Preview & Batch Prompt)
-# ------------------------------------------------------------
-# Adds inline edit capability for preview before saving with button-based batch control (no input())
-
 import csv
 import os
 import json
 import re
 import pandas as pd
-from datetime import datetime
-from io import StringIO
-from IPython.display import display, clear_output
-import ipywidgets as widgets
 import streamlit as st
 
 # 🔁 Ensure output directory exists
@@ -30,23 +22,19 @@ FIELDNAMES = [
 GHOSHA_MARKERS = ["ଘୋଷା", "ଘୋଷା ।", "ଘୋଷା।", "॥ ଘୋଷା ॥", "॥ପଦ॥", "॥0॥", "॥"]
 ANTARA_END_RE = r"[।॥] ?[୧୨୩123]+ ?[।॥]"
 
-# Load existing data if present
 def load_existing_data():
     if os.path.exists(CSV_FILE):
         return pd.read_csv(CSV_FILE)
     else:
         return pd.DataFrame(columns=FIELDNAMES)
 
-# Save to CSV and return download link
 def save_and_get_csv(data, df):
     df = pd.concat([df, pd.DataFrame([data])], ignore_index=True)
     df.to_csv(CSV_FILE, index=False, encoding='utf-8-sig')
-    csv_bytes = df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig')
-    return csv_bytes
+    return df.to_csv(index=False, encoding='utf-8-sig').encode('utf-8-sig')
 
 # --- Streamlit App Starts ---
 st.title("🎶 Odia Song Structure Collector (Chhanda001)")
-
 st.markdown("Paste your **Odia song** below (include Ghoṣā & one Antarā).")
 song_text = st.text_area("Odia Song (Ghoṣā + Antarā)", height=300)
 
@@ -72,7 +60,6 @@ if st.button("Submit Song"):
             elif not title and not line.startswith("("):
                 title = line.strip()
 
-        # Detect Ghoṣā index
         ghosha_index = -1
         for i, line in enumerate(lines):
             if any(marker in line for marker in GHOSHA_MARKERS):
@@ -101,11 +88,11 @@ if st.button("Submit Song"):
             edited_ghosha = []
             ghosha_pattern = []
             for i, line in enumerate(ghosha_lines):
-                col1, col2 = st.columns([4,1])
+                col1, col2 = st.columns([4, 1])
                 with col1:
                     edited = st.text_input(f"Ghoṣā Line {i+1}", line)
                 with col2:
-                    count = st.number_input(f"Akṣaras", value=len(edited), min_value=1, key=f"ghosa_{i}")
+                    count = st.number_input(f"Akṣaras", value=len(edited), min_value=1, key=f"ghosha_{i}")
                 edited_ghosha.append(edited)
                 ghosha_pattern.append(count)
 
@@ -113,7 +100,7 @@ if st.button("Submit Song"):
             edited_antara = []
             antara_pattern = []
             for i, line in enumerate(antara_lines):
-                col1, col2 = st.columns([4,1])
+                col1, col2 = st.columns([4, 1])
                 with col1:
                     edited = st.text_input(f"Antarā Line {i+1}", line)
                 with col2:
@@ -130,8 +117,10 @@ if st.button("Submit Song"):
 
             row = {
                 "title": title, "poet": poet, "raga": raga, "tala": tala,
-                "ghosa_total": g_total, "ghosa_lines": g_lines, "ghosa_pattern": g_pattern, "ghosa_text": "\n".join(edited_ghosha),
-                "antara_total": a_total, "antara_lines": a_lines, "antara_pattern": a_pattern, "antara_text": "\n".join(edited_antara),
+                "ghosa_total": g_total, "ghosa_lines": g_lines, "ghosa_pattern": g_pattern,
+                "ghosa_text": "\n".join(edited_ghosha),
+                "antara_total": a_total, "antara_lines": a_lines, "antara_pattern": a_pattern,
+                "antara_text": "\n".join(edited_antara),
                 "structure_notation": notation,
                 "structure_json": json.dumps({
                     "ghosa_total": g_total, "ghosa_lines": g_lines, "ghosa_pattern": ghosha_pattern,
@@ -148,5 +137,4 @@ if st.button("Submit Song"):
             st.markdown("---")
             if st.button("➕ Add Another Song"):
                 st.experimental_rerun()
-# 🔁 Triggering redeploy
 
